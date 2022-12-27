@@ -25,13 +25,19 @@ jobs:
       - name: Print release versions
         run: echo "Version ${{ steps.releaseVersionCurrent.outputs.release }} -> ${{ steps.releaseVersionNext.outputs.version }}"
 
+      - name: No new version
+        if: ${{ steps.releaseVersionCurrent.outputs.release == steps.releaseVersionNext.outputs.version }}
+
       # https://www.youtube.com/watch?v=_ueJ3LrRqPU&ab_channel=MicrosoftDevRadio
       - name: Create next release archive
+        if: ${{ steps.releaseVersionCurrent.outputs.release != steps.releaseVersionNext.outputs.version }}
         uses: thedoctor0/zip-release@master
         with:
           filename: release.zip
+          exclusions: '*.git* /*node_modules/* .editorconfig'
 
       - name: Create next release
+        if: ${{ steps.releaseVersionCurrent.outputs.release != steps.releaseVersionNext.outputs.version }}
         id: releaseCreate
         uses: actions/create-release@v1
         env:
@@ -41,6 +47,7 @@ jobs:
           release_name: Release v${{ steps.releaseVersionNext.outputs.version }}
 
       - name: Upload next release
+        if: ${{ steps.releaseVersionCurrent.outputs.release != steps.releaseVersionNext.outputs.version }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
