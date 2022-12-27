@@ -1,0 +1,234 @@
+.flowprint {
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+.flowprint-layer {
+	display: flex;
+	flex-direction: column;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+.flowprint-block {
+	display: flex;
+	flex-direction: column;
+	position: absolute;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	background: rgb(240,240,240);
+	z-index: 10;
+	box-shadow: 0 1px 2px 1px rgb(0, 0, 0, 0.15);
+	touch-action: none; /* !!! IMPORTANT !!! */
+}
+
+.flowprint-block-header {
+	display: flex;
+	flex-direction: row;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	background: rgb(150,150,150);
+	font-weight: 600;
+	min-height: 28px;
+}
+
+.flowprint-block-body {
+	display: grid;
+	grid-template-areas: 'content content content' 'pins-in spacer pins-out';
+	flex: 1;
+	flex-direction: column;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	font-size: 10px;
+	max-width: 420px;
+}
+
+.flowprint-block-content {
+	grid-area: content;
+	padding: 3px 5px;
+	flex: 1;
+	cursor: move;
+}
+
+.flowprint-block-spacer {
+	grid-area: spacer;
+	box-sizing: border-box;
+	width: 20px;
+}
+
+.flowprint-block-header .flowprint-block-content {
+	color: rgb(255,255,255);
+}
+
+.flowprint-pin {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	font-size: 14px;
+	cursor: pointer;
+	position: relative;
+}
+
+.flowprint-pin-handle {
+	content: ' ';
+	display: block;
+	position: relative;
+}
+
+.flowprint-pin.flow {
+
+}
+
+.flowprint-pin.value {
+
+}
+
+.flowprint-pin[data-kind="flow"] .flowprint-pin-handle {
+	background: rgb(255 255 255);
+	border: 1px solid rgb(50, 50, 50);
+	border-right: none;
+	width: 10px;
+	height: 10px;
+	margin: 0 10px 0 5px;
+}
+
+.flowprint-pin[data-kind="flow"] .flowprint-pin-handle:before {
+	content: ' ';
+	display: block;
+	position: absolute;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 5px 0 5px 5px;
+	border-color: transparent transparent transparent #ffffff;
+	margin: 0 0 0 10px;
+	z-index: 10;
+}
+
+.flowprint-pin[data-kind="flow"] .flowprint-pin-handle:after {
+	content: ' ';
+	display: block;
+	position: absolute;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 6px 0 6px 6px;
+	border-color: transparent transparent transparent rgb(50,50,50);
+	margin: -1px 0 0 10px;
+}
+
+.flowprint-pin[data-kind="flow"]:hover .flowprint-pin-handle {
+	border-color: rgb(100, 190, 255);
+}
+
+.flowprint-pin[data-kind="flow"]:hover .flowprint-pin-handle:after {
+	border-color: transparent transparent transparent rgb(100, 190, 255);
+}
+
+.flowprint-pin[data-kind="flow"].fill .flowprint-pin-handle {
+	background: rgb(100, 100, 100);
+}
+
+.flowprint-pin[data-kind="flow"].fill .flowprint-pin-handle:before {
+	border-color: transparent transparent transparent rgb(100, 100, 100);
+}
+
+.flowprint-pin[data-kind="value"] .flowprint-pin-handle {
+	border-radius: 50%;
+	width: 10px;
+	height: 10px;
+	margin: 0 5px 0 5px;
+	border: 1px solid rgb(100, 100, 100);
+}
+
+.flowprint-pin[data-kind="value"]:hover .flowprint-pin-handle {
+	border: 1px solid rgb(100, 190, 255);
+}
+
+.flowprint-pin[data-kind="value"].fill .flowprint-pin-handle {
+	background: rgb(160, 200, 60);
+}
+
+.flowprint-pin:hover {
+	color: rgb(100, 190, 255);
+}
+
+.flowprint-pin-container {
+	display: flex;
+	flex-direction: column;
+	flex: 0 1 auto;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+.flowprint-pin-container.input {
+	grid-area: pins-in;
+	/*margin: 0 10px 0 0;*/
+}
+
+.flowprint-pin-container.output {
+	grid-area: pins-out;
+	/*margin: 0 0 0 10px;*/
+}
+
+.flowprint-pin-container.output .flowprint-pin {
+	flex-direction: row-reverse;
+}
+
+.flowprint-block-header .flowprint-pin-container {
+	justify-content: center;
+}
+
+.flowprint-link {
+	fill: none;
+	stroke-width: 3;
+	cursor: pointer;
+}
+
+.flowprint-link[data-kind="new"] {
+	stroke: rgb(150, 200, 255);
+	stroke-dasharray: 6,6;
+}
+
+.flowprint-link[data-kind="new"]:hover {
+	stroke: rgb(165, 199, 252);
+}
+
+.flowprint-link[data-kind="flow"] {
+	stroke: rgb(120, 120, 120);
+}
+
+.flowprint-link[data-kind="flow"]:hover {
+	stroke: rgb(140, 140, 140);
+}
+
+.flowprint-link[data-kind="value"] {
+	stroke: rgb(160, 200, 60);
+}
+
+.flowprint-link[data-kind="value"]:hover {
+	stroke: rgb(186, 238, 79);
+}
+
+.flowprint-link[data-kind="link"] {
+	stroke: rgb(241, 131, 85);
+}
+
+.flowprint-link[data-kind="link"]:hover {
+	stroke: rgb(255, 154, 111);
+}

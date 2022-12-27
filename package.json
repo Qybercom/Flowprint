@@ -1,0 +1,25 @@
+{
+	"name": "@qybercom/flowprint",
+	"version": "1.0.0",
+	"description": "Vanilla-JS library for developing the blueprints",
+	"main": "src/flowprint.js",
+	"scripts": { },
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Qybercom/Flowprint.git"
+	},
+	"keywords": [
+		"flowprint",
+		"blueprint",
+		"svg",
+		"bezier",
+		"links"
+	],
+	"author": "Alexandru Furnica",
+	"license": "LGPL-3.0",
+	"bugs": {
+		"url": "https://github.com/Qybercom/Flowprint/issues"
+	},
+	"homepage": "https://github.com/Qybercom/Flowprint#readme",
+	"devDependencies": { }
+}
