@@ -27,6 +27,7 @@ jobs:
 
       - name: No new version
         if: ${{ steps.releaseVersionCurrent.outputs.release == steps.releaseVersionNext.outputs.version }}
+        run: echo "Versions are same, stop creating release"
 
       # https://www.youtube.com/watch?v=_ueJ3LrRqPU&ab_channel=MicrosoftDevRadio
       - name: Create next release archive
