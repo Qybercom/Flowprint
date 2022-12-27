@@ -1,6 +1,6 @@
 name: Create release
 on: [push]
-# test message
+
 jobs:
   build:
     name: Create release

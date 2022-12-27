@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/flowprint",
-	"version": "0.0.4",
+	"version": "1.0.0",
 	"description": "Vanilla-JS library for developing the blueprints",
 	"main": "src/flowprint.js",
 	"scripts": { },
