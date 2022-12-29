@@ -7,6 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: AutoReleaser
-        uses: Qybercom/AutoReleaser-GitHub
+        uses: Qybercom/AutoReleaser-GitHub@1.0.0
         with:
           platform: 'npm'
