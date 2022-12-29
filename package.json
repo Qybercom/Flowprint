@@ -1,9 +1,11 @@
 {
 	"name": "@qybercom/flowprint",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Vanilla-JS library for developing the blueprints",
 	"main": "src/flowprint.js",
-	"scripts": { },
+	"scripts": {
+	  "build": "npm install -g @qybercom/vanilla-pack && vanilla-pack"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Qybercom/Flowprint.git"
@@ -20,6 +22,5 @@
 	"bugs": {
 		"url": "https://github.com/Qybercom/Flowprint/issues"
 	},
-	"homepage": "https://github.com/Qybercom/Flowprint#readme",
-	"devDependencies": { }
+	"homepage": "https://github.com/Qybercom/Flowprint#readme"
 }

@@ -1,0 +1,70 @@
+{
+  "modules": {
+	"*": {
+	  "input": {
+		"path": "./src",
+		"exclude": ["./src/themes"],
+		"types": [
+		  {
+			"mime": "application/javascript",
+			"processors": ["@lintJS"]
+		  },
+		  {
+			"mime": "text/css",
+			"processors": ["@lintCSS"]
+		  }
+		]
+	  },
+	  "output": {
+		"path": "./dist",
+		"types": [
+		  {
+			"mime": "application/javascript",
+			"processors": ["@uglifyJS"],
+			"path": "flowprint.min.js"
+		  },
+		  {
+			"mime": "text/css",
+			"processors": ["@uglifyCSS"],
+			"path": "flowprint.min.css"
+		  }
+		]
+	  }
+	},
+	"theme-unreal": {
+	  "input": {
+		"path": "./src/themes/unreal.css",
+		"types": [
+		  {
+			"mime": "text/css",
+			"processors": ["@lintCSS"]
+		  }
+		]
+	  },
+	  "output": {
+		"path": "./dist",
+		"types": [
+		  {
+			"mime": "text/css",
+			"processors": ["@uglifyCSS"],
+			"path": "flowprint-unreal.min.css"
+		  }
+		]
+	  }
+	}
+  },
+  "processors": {
+	"lintCSS": {
+
+	},
+	"lintJS": {
+
+	},
+	"uglifyCSS": {
+
+	},
+	"uglifyJS": {
+
+	}
+  }
+}

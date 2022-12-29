@@ -1,0 +1,59 @@
+name: Create release
+# on: [push]
+
+jobs:
+  build:
+    name: Create release
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/marketplace/actions/get-latest-release
+      - name: Get current release version
+        id: releaseVersionCurrent
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+          excludes: prerelease, draft
+
+      # https://github.com/marketplace/actions/extract-package-version
+      - name: Checkout current release code
+        uses: actions/checkout@master
+
+      - name: Get next release version
+        id: releaseVersionNext
+        uses: Saionaro/extract-package-version@v1.0.6
+
+      - name: Print release versions
+        run: echo "Version ${{ steps.releaseVersionCurrent.outputs.release }} -> ${{ steps.releaseVersionNext.outputs.version }}"
+
+      - name: No new version
+        if: ${{ steps.releaseVersionCurrent.outputs.release == steps.releaseVersionNext.outputs.version }}
+        run: echo "Versions are same, stop creating release"
+
+      # https://www.youtube.com/watch?v=_ueJ3LrRqPU&ab_channel=MicrosoftDevRadio
+      - name: Create next release archive
+        if: ${{ steps.releaseVersionCurrent.outputs.release != steps.releaseVersionNext.outputs.version }}
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release.zip
+          exclusions: '*.git* /*node_modules/* .editorconfig'
+
+      - name: Create next release
+        if: ${{ steps.releaseVersionCurrent.outputs.release != steps.releaseVersionNext.outputs.version }}
+        id: releaseCreate
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.releaseVersionNext.outputs.version }}
+          release_name: Release v${{ steps.releaseVersionNext.outputs.version }}
+
+      - name: Upload next release
+        if: ${{ steps.releaseVersionCurrent.outputs.release != steps.releaseVersionNext.outputs.version }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.releaseCreate.outputs.upload_url }}
+          asset_path: ./release.zip
+          asset_name: ${{ github.event.repository.name }}-${{ steps.releaseVersionNext.outputs.version }}.zip
+          asset_content_type: application/zip
