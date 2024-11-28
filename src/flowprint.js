@@ -432,9 +432,9 @@ var Flowprint = function (selector, opt) {
 		while (i < that.data.blocks.length) {
 			if (that.data.blocks[i].id === id) {
 				if (that.onBlockRemove instanceof Function)
-					remove = that.onBlockRemove(blueprint, that.data.blocks[i]);
+					remove = that.onBlockRemove(that, that.data.blocks[i]);
 
-				if (remove) {
+				if (remove !== false) {
 					that.data.blocks[i].Remove();
 
 					delete that.data.blocks[i];
@@ -526,7 +526,7 @@ var Flowprint = function (selector, opt) {
 		while (i < that.data.links.length) {
 			if (that.data.links[i].id === id) {
 				if (that.onLinkRemove instanceof Function)
-					remove = that.onLinkRemove(blueprint, that.data.links[i]);
+					remove = that.onLinkRemove(that, that.data.links[i]);
 
 				if (remove !== false) {
 					var p1 = that.Pin(that.data.links[i].p1),
@@ -808,7 +808,9 @@ Flowprint.Block = function (opt) {
 		x: 0,
 		y: 0,
 		kind: Flowprint.Block.Kind.Generic,
+		kindMapped: '',
 		kindOptions: {},
+		properties: [],
 		onInit: null,
 		onMove: null,
 		onClick: null,
@@ -826,6 +828,8 @@ Flowprint.Block = function (opt) {
 	that.id = opt.id;
 	that.x = opt.x;
 	that.y = opt.y;
+	that.kindMapped = opt.kindMapped;
+	that.properties = opt.properties;
 	that.onInit = opt.onInit;
 	that.onMove = opt.onMove;
 	that.onClick = opt.onClick;
@@ -1036,7 +1040,7 @@ Flowprint.Block.Kind.Generic = function () {
 
 		var element = document.createElement('div');
 
-		element.setAttribute('class', 'flowprint-block');
+		element.setAttribute('class', 'flowprint-block' + (opt.class != '' ? ' ' + opt.class : ''));
 		element.setAttribute('id', opt.id);
 		element.style.left = opt.x + 'px';
 		element.style.top = opt.y + 'px';
@@ -1090,6 +1094,7 @@ Flowprint.Block.Kind.Generic = function () {
 							in: type === 'input',
 							out: type === 'output'
 						},
+						place: target,
 						_init: false
 					}));
 
@@ -1514,6 +1519,7 @@ Flowprint.Pin = function (opt) {
 			in: false,
 			out: false
 		},
+		place: '',
 		kind: null,
 		content: null,
 		onInit: null,
@@ -1539,6 +1545,7 @@ Flowprint.Pin = function (opt) {
 	that.id = opt.id;
 	that.content = opt.content;
 	that.direction = opt.direction;
+	that.place = opt.place;
 	that.kind = kind.Name;
 	that.onInit = opt.events.onInit;
 	that.onFill = opt.events.onFill;

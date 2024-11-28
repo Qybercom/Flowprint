@@ -43,6 +43,8 @@
 	background: rgb(150,150,150);
 	font-weight: 600;
 	min-height: 28px;
+	align-items: center;
+	gap: 5px;
 }
 
 .flowprint-block-body {
@@ -192,6 +194,10 @@
 
 .flowprint-block-header .flowprint-pin-container {
 	justify-content: center;
+}
+
+.flowprint-block-header .flowprint-pin {
+	font-weight: 400;
 }
 
 .flowprint-link {
