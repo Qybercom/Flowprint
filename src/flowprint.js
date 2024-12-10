@@ -414,6 +414,8 @@ var Flowprint = function (selector, opt) {
 					.appendChild(block.Container());
 
 				that.data.blocks.push(block);
+				
+				Flowprint.Block._ids++;
 			}
 		}
 
@@ -505,6 +507,8 @@ var Flowprint = function (selector, opt) {
 					.appendChild(link.Container());
 
 				that.data.links.push(link);
+				
+				Flowprint.Link._ids++;
 
 				if (callback instanceof Function)
 					callback(link.id, that);
@@ -808,7 +812,6 @@ Flowprint.Block = function (opt) {
 		x: 0,
 		y: 0,
 		kind: Flowprint.Block.Kind.Generic,
-		kindMapped: '',
 		kindOptions: {},
 		properties: [],
 		onInit: null,
@@ -828,7 +831,6 @@ Flowprint.Block = function (opt) {
 	that.id = opt.id;
 	that.x = opt.x;
 	that.y = opt.y;
-	that.kindMapped = opt.kindMapped;
 	that.properties = opt.properties;
 	that.onInit = opt.onInit;
 	that.onMove = opt.onMove;
@@ -840,6 +842,7 @@ Flowprint.Block = function (opt) {
 
 	if (that.id === null) {
 		that.id = 'flowprint-block-' + Flowprint.Block._ids;
+		opt.id = that.id;
 
 		Flowprint.Block._ids++;
 	}
@@ -872,6 +875,13 @@ Flowprint.Block = function (opt) {
 	 */
 	that.Container = function () {
 		return container;
+	};
+	
+	/**
+	 * @returns {object}
+	 */
+	that.KindOptions = function () {
+		return opt.kindOptions;
 	};
 
 	/**
@@ -1022,6 +1032,7 @@ Flowprint.Block.Kind.Generic = function () {
 				header: {
 					use: true,
 					content: null,
+					pinIdPrefix: true,
 					pins: {
 						in: [],
 						out: []
@@ -1030,6 +1041,7 @@ Flowprint.Block.Kind.Generic = function () {
 				body: {
 					use: true,
 					content: null,
+					pinIdPrefix: true,
 					pins: {
 						in: [],
 						out: []
@@ -1038,7 +1050,8 @@ Flowprint.Block.Kind.Generic = function () {
 			}
 		});
 
-		var element = document.createElement('div');
+		var element = document.createElement('div'),
+			i = 0;
 
 		element.setAttribute('class', 'flowprint-block' + (opt.class != '' ? ' ' + opt.class : ''));
 		element.setAttribute('id', opt.id);
@@ -1046,6 +1059,12 @@ Flowprint.Block.Kind.Generic = function () {
 		element.style.top = opt.y + 'px';
 
 		element.innerHTML = '';
+		
+		while (i < opt.properties.length) {
+			element.dataset[opt.properties[i].key] = opt.properties[i].value;
+			
+			i++;
+		}
 
 		if (opt.kindOptions.header.use)
 			element.innerHTML += ''
@@ -1065,7 +1084,6 @@ Flowprint.Block.Kind.Generic = function () {
 				+ '</div>';
 
 		var containers = element.querySelectorAll('.flowprint-pin-container'),
-			i = 0,
 			j = 0,
 			k = 0,
 			pin = null,
@@ -1076,7 +1094,8 @@ Flowprint.Block.Kind.Generic = function () {
 			},
 			target = null,
 			targets = ['header', 'body'];
-
+		
+		i = 0;
 		j = 0;
 
 		while (j < targets.length) {
@@ -1089,6 +1108,7 @@ Flowprint.Block.Kind.Generic = function () {
 
 				while (k < opt.kindOptions[target].pins[types[type]].length) {
 					pin = new Flowprint.Pin(Flowprint._extend(opt.kindOptions[target].pins[types[type]][k], {
+						idPrefix: opt.kindOptions[target].pinIdPrefix ? opt.id : '',
 						events: eventsPin,
 						direction: {
 							in: type === 'input',
@@ -1183,6 +1203,7 @@ Flowprint.Link = function (opt) {
 
 	if (that.id === null) {
 		that.id = 'flowprint-link-' + Flowprint.Link._ids;
+		opt.id = that.id;
 
 		Flowprint.Link._ids++;
 	}
@@ -1514,6 +1535,7 @@ Flowprint.Link.Kind = {
 Flowprint.Pin = function (opt) {
 	opt = Flowprint._extend(opt, {
 		id: null,
+		idPrefix: '',
 		class: '',
 		direction: {
 			in: false,
@@ -1561,6 +1583,11 @@ Flowprint.Pin = function (opt) {
 
 		Flowprint.Pin._ids++;
 	}
+	
+	if (opt.idPrefix)
+		that.id = opt.idPrefix + that.id.replace(new RegExp('^' + opt.idPrefix), '');
+	
+	opt.id = that.id;
 
 	var container = null;
 
