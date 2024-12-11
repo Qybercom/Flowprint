@@ -801,6 +801,13 @@ Flowprint._primitive = {
 Flowprint._primitive.Data = Flowprint._primitive._data;
 
 /**
+ * @returns {string}
+ */
+Flowprint._dateID = function () {
+	return new Date().toISOString().replace(/[^\d]/g, '');
+};
+
+/**
  * @param {object} opt
  *
  * @constructor
@@ -841,10 +848,8 @@ Flowprint.Block = function (opt) {
 	that.onPointerOut = opt.onPointerOut;
 
 	if (that.id === null) {
-		that.id = 'flowprint-block-' + Flowprint.Block._ids;
+		that.id = 'flowprint-block-' + Flowprint._dateID();
 		opt.id = that.id;
-
-		Flowprint.Block._ids++;
 	}
 
 	var container = null,
@@ -1202,10 +1207,8 @@ Flowprint.Link = function (opt) {
 	that.onPointerOut = opt.onPointerOut;
 
 	if (that.id === null) {
-		that.id = 'flowprint-link-' + Flowprint.Link._ids;
+		that.id = 'flowprint-link-' + Flowprint._dateID();
 		opt.id = that.id;
-
-		Flowprint.Link._ids++;
 	}
 
 	if (opt.x !== null) {
@@ -1578,11 +1581,8 @@ Flowprint.Pin = function (opt) {
 	that.onPointerOver = opt.events.onPointerOver;
 	that.onPointerOut = opt.events.onPointerOut;
 
-	if (that.id === null) {
-		that.id = 'flowprint-pin-' + Flowprint.Pin._ids;
-
-		Flowprint.Pin._ids++;
-	}
+	if (that.id === null)
+		that.id = 'flowprint-pin-' + Flowprint._dateID();
 	
 	if (opt.idPrefix)
 		that.id = opt.idPrefix + that.id.replace(new RegExp('^' + opt.idPrefix), '');
