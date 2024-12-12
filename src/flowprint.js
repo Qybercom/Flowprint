@@ -821,6 +821,7 @@ Flowprint.Block = function (opt) {
 		kind: Flowprint.Block.Kind.Generic,
 		kindOptions: {},
 		properties: [],
+		enabled: true,
 		onInit: null,
 		onMove: null,
 		onClick: null,
@@ -839,6 +840,7 @@ Flowprint.Block = function (opt) {
 	that.x = opt.x;
 	that.y = opt.y;
 	that.properties = opt.properties;
+	that.enabled = opt.enabled;
 	that.onInit = opt.onInit;
 	that.onMove = opt.onMove;
 	that.onClick = opt.onClick;
@@ -932,6 +934,20 @@ Flowprint.Block = function (opt) {
 			that.Container().style.top = y + 'px';
 		}
 
+		return that;
+	};
+	
+	/**
+	 * @param {boolean} enabled
+	 *
+	 * @returns {Flowprint.Block}
+	 */
+	that.Enabled = function (enabled) {
+		that.enabled = enabled;
+		
+		if (that.enabled) container.classList.remove('disabled');
+		else container.classList.add('disabled');
+		
 		return that;
 	};
 
@@ -1058,7 +1074,7 @@ Flowprint.Block.Kind.Generic = function () {
 		var element = document.createElement('div'),
 			i = 0;
 
-		element.setAttribute('class', 'flowprint-block' + (opt.class != '' ? ' ' + opt.class : ''));
+		element.setAttribute('class', 'flowprint-block' + (opt.enabled ? '' : ' disabled') + (opt.class != '' ? ' ' + opt.class : ''));
 		element.setAttribute('id', opt.id);
 		element.style.left = opt.x + 'px';
 		element.style.top = opt.y + 'px';
@@ -1170,6 +1186,7 @@ Flowprint.Link = function (opt) {
 		x2: null,
 		y2: null,
 		kind: null,
+		enabled: true,
 		type: Flowprint.Link.Type.Bezier,
 		onInit: null,
 		onMove: null,
@@ -1196,6 +1213,7 @@ Flowprint.Link = function (opt) {
 	that.p1 = opt.p1;
 	that.p2 = opt.p2;
 	that.kind = opt.kind;
+	that.enabled = opt.enabled;
 	that.onInit = opt.onInit;
 	that.onMove = opt.onMove;
 	that.onMoveEnd1 = opt.onMoveEnd1;
@@ -1248,7 +1266,7 @@ Flowprint.Link = function (opt) {
 	that.Init = function () {
 		var attributes = {
 			id: that.id,
-			class: 'flowprint-link ' + opt.class,
+			class: 'flowprint-link ' + opt.class + (that.enabled ? '' : ' disabled'),
 			'data-kind': that.kind
 		};
 
@@ -1340,6 +1358,20 @@ Flowprint.Link = function (opt) {
 
 		return that;
 	};
+	
+	/**
+	 * @param {boolean} enabled
+	 *
+	 * @returns {Flowprint.Link}
+	 */
+	that.Enabled = function (enabled) {
+		that.enabled = enabled;
+		
+		if (that.enabled) container.classList.remove('disabled');
+		else container.classList.add('disabled');
+		
+		return that;
+	};
 
 	/**
 	 * @param {boolean} visible
@@ -1367,7 +1399,7 @@ Flowprint.Link = function (opt) {
 	 * @returns {Flowprint.Link}
 	 */
 	that.AddClass = function (name) {
-		that.Container().classList.add(name);
+		container.classList.add(name);
 
 		return that;
 	};
@@ -1378,7 +1410,7 @@ Flowprint.Link = function (opt) {
 	 * @returns {boolean}
 	 */
 	that.HasClass = function (name) {
-		return that.Container().classList.contains(name);
+		return container.classList.contains(name);
 	};
 
 	/**
@@ -1387,7 +1419,7 @@ Flowprint.Link = function (opt) {
 	 * @returns {Flowprint.Link}
 	 */
 	that.RemoveClass = function (name) {
-		that.Container().classList.remove(name);
+		container.classList.remove(name);
 
 		return that;
 	};
@@ -1547,6 +1579,7 @@ Flowprint.Pin = function (opt) {
 		place: '',
 		kind: null,
 		content: null,
+		enabled: true,
 		onInit: null,
 		onFill: null,
 		onEmpty: null,
@@ -1572,6 +1605,7 @@ Flowprint.Pin = function (opt) {
 	that.direction = opt.direction;
 	that.place = opt.place;
 	that.kind = kind.Name;
+	that.enabled = opt.enabled;
 	that.onInit = opt.events.onInit;
 	that.onFill = opt.events.onFill;
 	that.onEmpty = opt.events.onEmpty;
@@ -1664,6 +1698,20 @@ Flowprint.Pin = function (opt) {
 
 		return that;
 	};
+	
+	/**
+	 * @param {boolean} enabled
+	 *
+	 * @returns {Flowprint.Pin}
+	 */
+	that.Enabled = function (enabled) {
+		that.enabled = enabled;
+		
+		if (that.enabled) container.classList.remove('disabled');
+		else container.classList.add('disabled');
+		
+		return that;
+	};
 
 	if (opt._init)
 		that.Init();
@@ -1720,14 +1768,15 @@ Flowprint.Pin.Kind._ = {
  * @param {string} kind
  * @param {string} id
  * @param {string|null} content
+ * @param {boolean} enabled
  *
  * @returns {HTMLDivElement}
  */
-Flowprint.Pin.Kind._html = function (kind, id, content) {
+Flowprint.Pin.Kind._html = function (kind, id, content, enabled) {
 	var pin = document.createElement('div');
 
 	pin.setAttribute('id', id);
-	pin.setAttribute('class', 'flowprint-pin');
+	pin.setAttribute('class', 'flowprint-pin' + (enabled ? '' : ' disabled'));
 	pin.setAttribute('data-kind', kind);
 
 	pin.innerHTML = '<a class="flowprint-pin-handle"></a>' + (content === null ? '' : content);
@@ -1750,7 +1799,7 @@ Flowprint.Pin.Kind.Generic = function () {
 	 * @return {HTMLElement}
 	 */
 	this.Init = function (opt) {
-		return Flowprint.Pin.Kind._html(opt.class, opt.id, opt.content);
+		return Flowprint.Pin.Kind._html(opt.class, opt.id, opt.content, opt.enabled);
 	};
 };
 
@@ -1771,7 +1820,7 @@ Flowprint.Pin.Kind.Flow = function () {
 	 * @return {HTMLElement}
 	 */
 	this.Init = function (opt) {
-		return Flowprint.Pin.Kind._html('flow', opt.id, opt.content);
+		return Flowprint.Pin.Kind._html('flow', opt.id, opt.content, opt.enabled);
 	};
 };
 
@@ -1792,7 +1841,7 @@ Flowprint.Pin.Kind.Value = function () {
 	 * @return {HTMLElement}
 	 */
 	this.Init = function (opt) {
-		return Flowprint.Pin.Kind._html('value', opt.id, opt.content);
+		return Flowprint.Pin.Kind._html('value', opt.id, opt.content, opt.enabled);
 	};
 };
 

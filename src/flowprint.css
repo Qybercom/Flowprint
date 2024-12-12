@@ -200,6 +200,26 @@
 	font-weight: 400;
 }
 
+.flowprint-block.disabled { }
+
+.flowprint-block.disabled:after {
+    display: flex;
+    content: ' ';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 11;
+}
+
+.flowprint-link.disabled {
+    opacity: 0.35;
+}
+
+.flowprint-pin.disabled {
+    opacity: 0.35;
+}
+
 .flowprint-link {
 	fill: none;
 	stroke-width: 3;
