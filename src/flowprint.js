@@ -53,7 +53,11 @@ var Flowprint = function (selector, opt) {
 		},
 
 		options: {
-			restrictEdges: true,
+			restrictEdges: false,
+			scale: 1.0,
+			scaleFactor: 0.001,
+			scaleMin: 0.1,
+			scaleMax: 10,
 			pinKindAuto: true,
 			linkDenySameBlock: true,
 			linkDenySamePin: true,
@@ -62,18 +66,26 @@ var Flowprint = function (selector, opt) {
 
 		events: {
 			onInit: null,
+			onClick: null,
+			onWheel: null,
+			onScale: null,
+			onPointerDown: null,
+			onPointerUp: null,
+			onPointerOver: null,
+			onPointerOut: null,
+			onPointerMove: null,
+			onTouchStart: null,
+			onTouchMove: null,
+			onTouchEnd: null,
+			onDragStart: null,
+			onDragMove: null,
+			onDragEnd: null,
 			onBlockAdd: null,
 			onBlockRemove: null,
 			onLinkAdd: null,
 			onLinkRemove: null,
 			onLinkStart: null,
-			onLinkFinish: null,
-			onClick: null,
-			onPointerDown: null,
-			onPointerUp: null,
-			onPointerOver: null,
-			onPointerOut: null,
-			onPointerMove: null
+			onLinkFinish: null
 		},
 		eventsBlock: {
 			onInit: null,
@@ -113,6 +125,20 @@ var Flowprint = function (selector, opt) {
 		stateBlockMove = null,
 		virtualX = 0,
 		virtualY = 0,
+		fullWidth = 0,
+		fullHeight = 0,
+		scale = opt.options.scale,
+		scaleEvent = null,
+		scaleTouchInitial = opt.options.scale,
+		scaleTouchDistanceInitial = null,
+		scaleTouchDistance = function (p1, p2) {
+			return Math.hypot(
+				p2.clientX - p1.clientX,
+				p2.clientY - p1.clientY
+			);
+		},
+		drag = false,
+		dragInitial = null,
 		onClick = function (e) {
 			var node = Flowprint.Pin._node(e.target),
 				link = null,
@@ -143,46 +169,81 @@ var Flowprint = function (selector, opt) {
 				}
 				else {
 					link = that.Link(stateLinkNew);
-
-					var finish = true;
-
-					if (that.onLinkFinish instanceof Function)
-						finish = that.onLinkFinish(that, link, pin, e);
-
-					if (finish !== false) {
-						link.MoveEnd2(node.x, node.y, pin.id);
-						pin.Fill(link.id);
+					
+					if (link !== null) {
+						var finish = true;
+	
+						if (that.onLinkFinish instanceof Function)
+							finish = that.onLinkFinish(that, link, pin, e);
+	
+						if (finish !== false) {
+							link.MoveEnd2(node.x, node.y, pin.id);
+							pin.Fill(link.id);
+						}
+	
+						stateLinkNew = null;
 					}
-
-					stateLinkNew = null;
 				}
 			}
 			else {
 				if (stateLinkNew === null) { }
 				else {
 					link = that.Link(stateLinkNew);
-
-					var remove = true;
-
-					if (that.onLinkFinish instanceof Function)
-						remove = that.onLinkFinish(that, link, null, e);
-
-					if (remove !== false) {
-						that.LinkRemove(link.id);
-
-						stateLinkNew = null;
+					
+					if (link !== null) {
+						var remove = true;
+	
+						if (that.onLinkFinish instanceof Function)
+							remove = that.onLinkFinish(that, link, null, e);
+	
+						if (remove !== false) {
+							that.LinkRemove(link.id);
+	
+							stateLinkNew = null;
+						}
 					}
 				}
 			}
 
-			if (that.onClick instanceof Function)
-				that.onClick(that, e);
+			if (that.onClick instanceof Function) {
+				var position = {
+					x: Math.round(e.offsetX / opt.grid.step) * opt.grid.step,
+					y: Math.round(e.offsetY / opt.grid.step) * opt.grid.step
+				};
+				
+				that.onClick(that, e, position, {x: e.offsetX, y: e.offsetY});
+			}
+		},
+		onWheel = function (e) {
+			if (e.ctrlKey) {
+				e.preventDefault();
+				scaleEvent = e;
+				
+				that.Scale(scale + (-e.deltaY * opt.options.scaleFactor));
+			}
+			
+			if (that.onWheel instanceof Function)
+				that.onWheel(that, e);
 		},
 		onPointerDown = function (e) {
 			if (stateLinkNew === null) {
 				var block = Flowprint.Block._node(e.target);
 
-				if (block !== null) {
+				if (block === null) {
+					if (e.target.classList.contains('flowprint-layer')) {
+						drag = true;
+						dragInitial = {x: e.offsetX, y: e.offsetY};
+						
+						if (that.onDragStart instanceof Function)
+							drag = that.onDragStart(that, e, {x: e.offsetX, y: e.offsetY});
+						
+						drag = drag !== false;
+						
+						if (drag)
+							e.target.classList.add('drag');
+					}
+				}
+				else {
 					block.setPointerCapture(e.pointerId);
 
 					stateBlockMove = block.id;
@@ -190,22 +251,49 @@ var Flowprint = function (selector, opt) {
 			}
 
 			if (that.onPointerDown instanceof Function)
-				that.onPointerDown(that, e);
+				that.onPointerDown(that, e, {x: e.offsetX, y: e.offsetY});
 		},
 		onPointerUp = function (e) {
 			if (stateBlockMove) {
 				stateBlockMove = null;
 			}
+			
+			if (drag) {
+				drag = false;
+				dragInitial = null;
+				
+				e.target.classList.remove('drag');
+				
+				if (that.onDragEnd instanceof Function)
+					that.onDragEnd(that, e, {x: e.offsetX, y: e.offsetY});
+			}
 
 			if (that.onPointerUp instanceof Function)
-				that.onPointerUp(that, e);
+				that.onPointerUp(that, e, {x: e.offsetX, y: e.offsetY});
 		},
 		onPointerMove = function (e) {
 			if (stateBlockMove === null) {
 				if (e.target.classList.contains('flowprint-layer')) {
-					if (stateLinkNew !== null) {
-						that.Link(stateLinkNew)
-							.MoveEnd2(e.offsetX, e.offsetY);
+					if (stateLinkNew === null) {
+						if (drag) {
+							var delta = {
+								x: dragInitial.x - e.offsetX,
+								y: dragInitial.y - e.offsetY
+							};
+							
+							if (that.onDragMove instanceof Function)
+								drag = that.onDragMove(that, e, {x: e.offsetX, y: e.offsetY}, delta);
+							
+							drag = drag !== false;
+							
+							if (drag)
+								that.Elem.querySelector('.flowprint').scrollBy(delta.x, delta.y);
+						}
+						
+						// TODO: support selecting
+					}
+					else {
+						that.Link(stateLinkNew)?.MoveEnd2(e.offsetX, e.offsetY);
 					}
 				}
 			}
@@ -242,26 +330,129 @@ var Flowprint = function (selector, opt) {
 					moveX = block.x + movementX;
 					moveY = block.y + movementY;
 				}
+				
+				moveX = Math.round(moveX / opt.grid.step) * opt.grid.step;
+				moveY = Math.round(moveY / opt.grid.step) * opt.grid.step;
 
-				var move = !opt.options.restrictEdges || (
-					(moveX >= 0 && (moveX + block.Width()) <= that.Elem.offsetWidth) &&
-					(moveY >= 0 && (moveY + block.Height()) <= that.Elem.offsetHeight)
-				);
+				var edgeX = moveX + block.Width(),
+					edgeY = moveY + block.Height(),
+					all = false,
+					move = !opt.options.restrictEdges || (
+						(moveX >= 0 && (edgeX) <= that.Elem.offsetWidth) &&
+						(moveY >= 0 && (edgeY) <= that.Elem.offsetHeight)
+					);
+				
+				if (moveX < 0 || moveY < 0) {
+					var allX = 0,
+						allY = 0;
+					
+					if (moveX < 0) {
+						allX = -moveX;
+						moveX = 0;
+						all = true;
+					}
+					
+					if (moveY < 0) {
+						allY = -moveY;
+						moveY = 0;
+						all = true;
+					}
+				}
 
-				if (move)
+				if (move) {
 					block.Move(moveX, moveY);
+				}
+				
+				if (all) {
+					var i = 0,
+						box = null;
+					
+					while (i < that.data.blocks.length) {
+						if (that.data.blocks[i].id !== block.id) {
+							that.data.blocks[i].MoveDelta(allX, allY);
+							
+							box = that.data.blocks[i].Box();
+							
+							if (edgeX < box.rb.x) edgeX = box.rb.x;
+							if (edgeY < box.rb.y) edgeY = box.rb.y;
+						}
+						
+						i++;
+					}
+				}
+					
+				var layerObjects = that.Elem.querySelector('.flowprint-layer.objects'),
+					layerCanvas = that.Elem.querySelector('.flowprint-layer.canvas'),
+					scrollX = 0,
+					scrollY = 0;
+				
+				if (fullWidth < edgeX) {
+					edgeX += 'px';
+					
+					layerCanvas.style.width = edgeX;
+					layerObjects.style.width = edgeX;
+					
+					scrollX = e.movementX;
+				}
+				
+				if (fullHeight < edgeY) {
+					edgeY += 'px';
+					
+					layerCanvas.style.height = edgeY;
+					layerObjects.style.height = edgeY;
+					
+					scrollY = e.movementY;
+				}
+				
+				that.Elem.querySelector('.flowprint').scrollBy(scrollX, scrollY);
 			}
 
 			if (that.onPointerMove instanceof Function)
-				that.onPointerMove(that, e);
+				that.onPointerMove(that, e, {x: e.offsetX, y: e.offsetY});
+		},
+		onTouchStart = function (e) {
+			if (e.touches.length === 2) {
+				scaleTouchInitial = scale;
+				scaleTouchDistanceInitial = scaleTouchDistance(e.touches[0], e.touches[1]);
+			}
+			
+			if (that.onTouchStart instanceof Function)
+				that.onTouchStart(that, e, e.touches);
+		},
+		onTouchMove = function (e) {
+			if (e.touches.length === 2 && scaleTouchDistanceInitial !== null) {
+				e.preventDefault();
+				scaleEvent = e;
+				
+				that.Scale(scaleTouchInitial * (scaleTouchDistanceInitial === 0
+					? 1
+					: scaleTouchDistance(e.touches[0], e.touches[1]) / scaleTouchDistanceInitial)
+				);
+			}
+			
+			if (that.onTouchMove instanceof Function)
+				that.onTouchMove(that, e, e.changedTouches);
+		},
+		onTouchEnd = function (e) {
+			if (e.touches.length === 2) {
+				scaleTouchInitial = scale;
+				scaleTouchDistanceInitial = null;
+			}
+			
+			if (that.onTouchEnd instanceof Function)
+				that.onTouchEnd(that, e, e.changedTouches);
 		},
 		events = {
 			click: onClick,
-			pointerover: function (e) { if (that.onPointerOver instanceof Function) that.onPointerOver(that, e); },
-			pointerout: function (e) { if (that.onPointerOut instanceof Function) that.onPointerOut(that, e); },
+			wheel: onWheel,
+			pointerover: function (e) { if (that.onPointerOver instanceof Function) that.onPointerOver(that, e, {x: e.offsetX, y: e.offsetY}); },
+			pointerout: function (e) { if (that.onPointerOut instanceof Function) that.onPointerOut(that, e, {x: e.offsetX, y: e.offsetY}); },
 			pointerdown: onPointerDown,
 			pointermove: onPointerMove,
-			pointerup: onPointerUp
+			pointerup: onPointerUp,
+			touchstart: onTouchStart,
+			touchmove: onTouchMove,
+			touchend: onTouchEnd
 		};
 
 	that.Elem = document.querySelector(selector);
@@ -271,18 +462,26 @@ var Flowprint = function (selector, opt) {
 	};
 
 	that.onInit = opt.events.onInit;
+	that.onClick = opt.events.onClick;
+	that.onWheel = opt.events.onWheel;
+	that.onScale = opt.events.onScale;
+	that.onPointerDown = opt.events.onPointerDown;
+	that.onPointerUp = opt.events.onPointerUp;
+	that.onPointerOver = opt.events.onPointerOver;
+	that.onPointerOut = opt.events.onPointerOut;
+	that.onPointerMove = opt.events.onPointerMove;
+	that.onTouchStart = opt.events.onTouchStart;
+	that.onTouchMove = opt.events.onTouchMove;
+	that.onTouchEnd = opt.events.onTouchEnd;
+	that.onDragStart = opt.events.onDragStart;
+	that.onDragMove = opt.events.onDragMove;
+	that.onDragEnd = opt.events.onDragEnd;
 	that.onBlockAdd = opt.events.onBlockAdd;
 	that.onBlockRemove = opt.events.onBlockRemove;
 	that.onLinkAdd = opt.events.onLinkAdd;
 	that.onLinkRemove = opt.events.onLinkRemove;
 	that.onLinkStart = opt.events.onLinkStart;
 	that.onLinkFinish = opt.events.onLinkFinish;
-	that.onClick = opt.events.onClick;
-	that.onPointerDown = opt.events.onPointerDown;
-	that.onPointerUp = opt.events.onPointerUp;
-	that.onPointerOver = opt.events.onPointerOver;
-	that.onPointerOut = opt.events.onPointerOut;
-	that.onPointerMove = opt.events.onPointerMove;
 
 	/**
 	 * @returns {Flowprint}
@@ -303,17 +502,22 @@ var Flowprint = function (selector, opt) {
 
 		element.setAttribute('class', 'flowprint');
 
-		element.style['background'] = cssGrid['background'];
-		element.style['background-size'] = cssGrid['background-size'];
-
-		element.innerHTML =''
+		element.innerHTML ='<div class="flowprint-scaler">'
 			+ '<div class="flowprint-layer objects"></div>'
-			+ '<svg class="flowprint-layer canvas"></svg>';
+			+ '<svg class="flowprint-layer canvas"></svg>'
+			+ '</div>';
 
 		for (event in events)
 			element.addEventListener(event, events[event]);
 
 		that.Elem.appendChild(element);
+		
+		var layerObjects = that.Elem.querySelector('.flowprint-layer.objects');
+		layerObjects.style['background'] = cssGrid['background'];
+		layerObjects.style['background-size'] = cssGrid['background-size'];
+		
+		var width = 0,
+			height = 0;
 
 		for (key in keys) {
 			i = 0;
@@ -321,16 +525,55 @@ var Flowprint = function (selector, opt) {
 
 			while (i < opt.data[key].length) {
 				that[method](opt.data[key][i]);
+				
+				if (key !== 'link') {
+					if (opt.data[key][i].x > width) width = opt.data[key][i].x;
+					if (opt.data[key][i].y > height) height = opt.data[key][i].y;
+				}
 
 				i++;
 			}
 		}
 
 		Flowprint._ids++;
+		
+		width += 300;
+		height += 300;
+		
+		fullWidth = width;
+		fullHeight = height;
+		
+		width += 'px';
+		height += 'px';
+		
+		var layerCanvas = that.Elem.querySelector('.flowprint-layer.canvas');
+		
+		layerCanvas.style.width = width;
+		layerCanvas.style.height = height;
+		layerObjects.style.width = width;
+		layerObjects.style.height = height;
 
 		if (that.onInit instanceof Function)
 			that.onInit(that);
 
+		return that;
+	};
+	
+	/**
+	 * @param {number} value
+	 *
+	 * @return {Flowprint}
+	 */
+	that.Scale = function (value) {
+		var scaleCurrent = scale;
+		
+		scale = Math.min(Math.max(opt.options.scaleMin, value), opt.options.scaleMax);
+		
+		that.Elem.querySelector('.flowprint-scaler').style.transform = 'scale(' + scale + ')';
+		
+		if (that.onScale instanceof Function)
+			that.onScale(that, scaleEvent, scale, scaleCurrent - scale);
+		
 		return that;
 	};
 
@@ -592,6 +835,16 @@ var Flowprint = function (selector, opt) {
 		}
 
 		return out;
+	};
+	
+	/**
+	 * @returns {string}
+	 */
+	that.DataURL = function () {
+		return URL.createObjectURL(new Blob(
+			[JSON.stringify(that.Data(), null, 2)],
+			{ type: 'application/json' }
+		));
 	};
 
 	if (opt.init)
@@ -938,6 +1191,16 @@ Flowprint.Block = function (opt) {
 	};
 	
 	/**
+	 * @param {number} x
+	 * @param {number} y
+	 *
+	 * @returns {Flowprint.Block}
+	 */
+	that.MoveDelta = function (x, y) {
+		return that.Move(that.x + x, that.y + y);
+	};
+	
+	/**
 	 * @param {boolean} enabled
 	 *
 	 * @returns {Flowprint.Block}
@@ -974,6 +1237,21 @@ Flowprint.Block = function (opt) {
 		}
 
 		return null;
+	};
+	
+	/**
+	 * @return {{lt: {x: number, y: number}, rt: {x: number, y: number}, lb: {x: number, y: number}, rb: {x: number, y: number}}}
+	 */
+	that.Box = function () {
+		var w = that.Width(),
+			h = that.Height();
+		
+		return {
+			lt: { x: that.x, y: that.y },
+			rt: { x: that.x + w, y: that.y },
+			lb: { x: that.x, y: that.y + h },
+			rb: { x: that.x + w, y: that.y + h },
+		};
 	};
 
 	/**
@@ -1736,7 +2014,7 @@ Flowprint.Pin._node = function (element) {
 
 	var elementHandle = element.querySelector('.flowprint-pin-handle'),
 		elementBlock = element.parentNode.parentNode.parentNode;
-
+	
 	return {
 		element: element,
 		x: elementBlock.offsetLeft + element.offsetLeft + elementHandle.offsetLeft + (elementHandle.offsetWidth / 2),
