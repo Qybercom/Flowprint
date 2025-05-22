@@ -1075,6 +1075,7 @@ Flowprint.Block = function (opt) {
 		kindOptions: {},
 		properties: [],
 		enabled: true,
+		comment: '',
 		onInit: null,
 		onMove: null,
 		onClick: null,
@@ -1094,6 +1095,7 @@ Flowprint.Block = function (opt) {
 	that.y = opt.y;
 	that.properties = opt.properties;
 	that.enabled = opt.enabled;
+	that.comment = opt.comment;
 	that.onInit = opt.onInit;
 	that.onMove = opt.onMove;
 	that.onClick = opt.onClick;
@@ -1108,7 +1110,18 @@ Flowprint.Block = function (opt) {
 	}
 
 	var container = null,
-		pins = [];
+		pins = [],
+		_comment = function (element, comment) {
+			if (comment !== undefined) {
+				that.comment = comment;
+				
+				element.innerHTML = opt.kindOptions.comment !== undefined && opt.kindOptions.comment.processor instanceof Function
+					? opt.kindOptions.comment.processor(comment)
+					: comment;
+			}
+			
+			return that.comment;
+		};
 
 	/**
 	 * @returns {Flowprint.Block}
@@ -1138,9 +1151,15 @@ Flowprint.Block = function (opt) {
 	};
 	
 	/**
+	 * @param {object=} options
+	 * @param {boolean=} extend
+	 *
 	 * @returns {object}
 	 */
-	that.KindOptions = function () {
+	that.KindOptions = function (options, extend) {
+		if (options !== undefined)
+			opt.kindOptions = extend === undefined || extend ? Flowprint._extend(opt.kindOptions, options) : options;
+		
 		return opt.kindOptions;
 	};
 
@@ -1212,6 +1231,43 @@ Flowprint.Block = function (opt) {
 		else container.classList.add('disabled');
 		
 		return that;
+	};
+	
+	/**
+	 * @param {string=} comment
+	 *
+	 * @returns {string}
+	 */
+	that.Comment = function (comment) {
+		return _comment(container.querySelector('.flowprint-block-comment'), comment);
+	};
+	
+	/**
+	 * @param {string=} comment
+	 *
+	 * @returns {string}
+	 */
+	that.CommentBefore = function (comment) {
+		var element = container.querySelector('.flowprint-block-comment');
+		
+		element.classList.remove('after');
+		element.classList.add('before');
+		
+		return _comment(element, comment);
+	};
+	
+	/**
+	 * @param {string=} comment
+	 *
+	 * @returns {string}
+	 */
+	that.CommentAfter = function (comment) {
+		var element = container.querySelector('.flowprint-block-comment');
+		
+		element.classList.remove('before');
+		element.classList.add('after');
+		
+		return _comment(element, comment);
 	};
 
 	/**
@@ -1345,6 +1401,11 @@ Flowprint.Block.Kind.Generic = function () {
 						in: [],
 						out: []
 					}
+				},
+				comment: {
+					use: true,
+					position: 'after',
+					processor: null
 				}
 			}
 		});
@@ -1364,6 +1425,9 @@ Flowprint.Block.Kind.Generic = function () {
 			
 			i++;
 		}
+		
+		if (opt.kindOptions.comment.use && opt.kindOptions.comment.position === 'before')
+			element.innerHTML += '<div class="flowprint-block-comment before">' + opt.comment + '</div>';
 
 		if (opt.kindOptions.header.use)
 			element.innerHTML += ''
@@ -1381,6 +1445,9 @@ Flowprint.Block.Kind.Generic = function () {
 				+ '<div class="flowprint-block-spacer"></div>'
 				+ '<div class="flowprint-pin-container output"></div>'
 				+ '</div>';
+		
+		if (opt.kindOptions.comment.use && opt.kindOptions.comment.position === 'after')
+			element.innerHTML += '<div class="flowprint-block-comment after">' + opt.comment + '</div>';
 
 		var containers = element.querySelectorAll('.flowprint-pin-container'),
 			j = 0,
@@ -1465,6 +1532,7 @@ Flowprint.Link = function (opt) {
 		y2: null,
 		kind: null,
 		enabled: true,
+		comment: '',
 		type: Flowprint.Link.Type.Bezier,
 		onInit: null,
 		onMove: null,
@@ -1492,6 +1560,7 @@ Flowprint.Link = function (opt) {
 	that.p2 = opt.p2;
 	that.kind = opt.kind;
 	that.enabled = opt.enabled;
+	that.comment = opt.comment;
 	that.onInit = opt.onInit;
 	that.onMove = opt.onMove;
 	that.onMoveEnd1 = opt.onMoveEnd1;
@@ -1858,6 +1927,7 @@ Flowprint.Pin = function (opt) {
 		kind: null,
 		content: null,
 		enabled: true,
+		comment: '',
 		onInit: null,
 		onFill: null,
 		onEmpty: null,
@@ -1884,6 +1954,7 @@ Flowprint.Pin = function (opt) {
 	that.place = opt.place;
 	that.kind = kind.Name;
 	that.enabled = opt.enabled;
+	that.comment = opt.comment;
 	that.onInit = opt.events.onInit;
 	that.onFill = opt.events.onFill;
 	that.onEmpty = opt.events.onEmpty;

@@ -1,6 +1,6 @@
 .flowprint {
 	position: relative;
-    overflow: auto;
+	overflow: auto;
 	width: 100%;
 	height: 100%;
 	box-sizing: border-box;
@@ -88,6 +88,22 @@
 
 .flowprint-block-header .flowprint-block-content {
 	color: rgb(255,255,255);
+}
+
+.flowprint-block-comment {
+	font-size: 12px;
+	line-height: 14px;
+	color: rgb(100,100,100);
+	position: absolute;
+}
+
+.flowprint-block-comment.before {
+	margin: 0 0 8px 0;
+	top: -100%;
+}
+
+.flowprint-block-comment.after {
+	margin: 8px 0 0 0;
 }
 
 .flowprint-pin {
@@ -217,21 +233,23 @@
 .flowprint-block.disabled { }
 
 .flowprint-block.disabled:after {
-    display: flex;
-    content: ' ';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 11;
+	display: flex;
+	content: ' ';
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.35);
+	z-index: 11;
 }
 
 .flowprint-link.disabled {
-    opacity: 0.35;
+	opacity: 0.35;
 }
 
 .flowprint-pin.disabled {
-    opacity: 0.35;
+	opacity: 0.35;
 }
 
 .flowprint-link {
